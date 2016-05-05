@@ -278,6 +278,65 @@ def load_creditscoring2(cost_mat_parameters=None):
                  feature_names=data.columns.values, name='CreditScoring_PAKDD2009')
 
 
+def load_creditgerman(cost_mat_parameters=None):
+    """Load and return the UCI credit-german dataset (classification).
+
+    The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
+
+    Parameters
+    ----------
+    cost_mat_parameters : Dictionary-like object, optional (default=None)
+        If not None, must include 'int_r'
+
+    Returns
+    -------
+    data : Bunch
+        Dictionary-like object, the interesting attributes are:
+        'data', the data to learn, 'target', the classification labels,
+        'cost_mat', the cost matrix of each example,
+        'target_names', the meaning of the labels, 'feature_names', the
+        meaning of the features, and 'DESCR', the full description of the dataset.
+
+    References
+    ----------
+    .. [1] Lichman, M. (2013).
+           UCI Machine Learning Repository [http://archive.ics.uci.edu/ml].
+           Irvine, CA: University of California, School of Information and Computer Science.
+
+    Examples
+    --------
+    Let's say you are interested in the samples 10, 25, and 50
+
+    >>> from costcla.datasets import load_creditgerman
+    >>> data = load_creditgerman()
+    >>> data.target[[10, 17, 50]]
+    array([1, 0, 0])
+    >>> data.cost_mat[[10, 17, 50]]
+    array([[ 209.   ,  547.965,    0.   ,    0.   ],
+           [  24.   ,  274.725,    0.   ,    0.   ],
+           [  89.   ,  371.25 ,    0.   ,    0.   ]])
+    """
+    module_path = dirname(__file__)
+    raw_data = pd.read_csv(join(module_path, 'data', 'credit-g.csv'), delimiter=',')
+    descr = open(join(module_path, 'descr', 'credit-g.rst')).read()
+
+    n_samples = raw_data.shape[0]
+    target = np.zeros((n_samples,), dtype=np.int)
+    target[raw_data['class'].values == 'bad'] = 1
+
+    data = raw_data.drop(['class'], 1)
+    # Calculate cost_mat
+    if cost_mat_parameters is None:
+        cost_mat_parameters = {'int_r': 0.15}
+
+    cost_mat = _creditgerman_costmat(data['credit_amount'].values, cost_mat_parameters)
+
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat,
+                 target_names=['good', 'bad'], DESCR=descr,
+                 feature_names=data.columns.values, name='CreditGerman')
+
+
+
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     """ Private function to calculate the cost matrix of credit scoring models.
 
@@ -354,6 +413,17 @@ def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     cost_mat = np.zeros((n_samples, 4))  #cost_mat[FP,FN,TP,TN]
     cost_mat[:, 0] = v_calculate_cost_fp(cl, int_r, n_term, int_cf, pi_1, lgd, cl_avg)
     cost_mat[:, 1] = v_calculate_cost_fn(cl, lgd)
+    cost_mat[:, 2] = 0.0
+    cost_mat[:, 3] = 0.0
+
+    return cost_mat
+
+
+def _creditgerman_costmat(amount, cost_mat_parameters):
+    n_samples = len(amount)
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = amount[:]
+    cost_mat[:, 1] = amount[:] * cost_mat_parameters['int_r']
     cost_mat[:, 2] = 0.0
     cost_mat[:, 3] = 0.0
 
