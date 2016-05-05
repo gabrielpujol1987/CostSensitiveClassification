@@ -323,8 +323,20 @@ def load_creditgerman(cost_mat_parameters=None):
     n_samples = raw_data.shape[0]
     target = np.zeros((n_samples,), dtype=np.int)
     target[raw_data['class'].values == 'bad'] = 1
+    target = target.astype(int)
 
-    data = raw_data.drop(['class'], 1)
+    # Continuous features
+    cols_con = ['duration', 'credit_amount', 'installment_commitment',
+                'residence_since', 'age', 'existing_credits', 'num_dependents']
+    data = raw_data[cols_con].astype(float)
+    # Nominal features
+    cols_dummies = ['checking_status', 'credit_history', 'purpose', 'savings_status', 'employment',
+                    'personal_status', 'other_parties', 'property_magnitude', 'other_payment_plans',
+                    'housing', 'job', 'own_telephone']
+    for col_ in cols_dummies:
+        temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
+        data = data.join(temp_)
+
     # Calculate cost_mat
     if cost_mat_parameters is None:
         cost_mat_parameters = {'int_r': 0.15}
@@ -422,8 +434,8 @@ def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
 def _creditgerman_costmat(amount, cost_mat_parameters):
     n_samples = len(amount)
     cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
-    cost_mat[:, 0] = amount[:]
-    cost_mat[:, 1] = amount[:] * cost_mat_parameters['int_r']
+    cost_mat[:, 0] = amount[:] * cost_mat_parameters['int_r']
+    cost_mat[:, 1] = amount[:]
     cost_mat[:, 2] = 0.0
     cost_mat[:, 3] = 0.0
 
