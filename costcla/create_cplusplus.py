@@ -7,12 +7,12 @@ import numpy as np
 
 
 def create_c_files(ds, filename, output_folder):
-    orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names)
+    orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names, ds.target_names)
     _write_csv(filename + '_ORIGINAL', output_folder, orig_data, header)
-    train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names)
+    train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names, ds.target_names)
     train_filename = filename + '_TRAIN'
     _write_csv(train_filename, output_folder, train_data, header)
-    test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names)
+    test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names, ds.target_names)
     _write_csv(filename + '_TEST', output_folder, test_data, header)
 
     for key, fold in ds.folds.items():
@@ -34,7 +34,7 @@ def _write_csv(filename, output_folder, data, header):
         writer.writerows(data)
 
 
-def _create_matrix(data, target, cost_mat, feature_names):
+def _create_matrix(data, target, cost_mat, feature_names, target_names):
     n_samples = len(target)
     good = target[:] == 0
     bad = target[:] == 1
@@ -48,4 +48,4 @@ def _create_matrix(data, target, cost_mat, feature_names):
     final_data = np.append(data, good_cost, axis=1)
     final_data = np.append(final_data, bad_cost, axis=1)
 
-    return final_data, np.append(feature_names, ['good', 'bad'])
+    return final_data, np.append(feature_names, target_names)

@@ -48,5 +48,5 @@ def create_all_folds(ds, numFolds, trainRatio, seed=0):
 
         count = count + 1
 
-    return Bunch(main=main, folds=folds, feature_names=ds.feature_names,
+    return Bunch(main=main, folds=folds, feature_names=ds.feature_names, target_names=ds.target_names,
                  orig_data=ds.data, orig_target=ds.target, orig_cost_mat=ds.cost_mat)
