@@ -2,7 +2,7 @@
 """
 Created on Mon May  9 14:38:32 2016
 
-@author: GabrielLocal
+@author: gabrielpujol87
 """
 
 import RunBenchmark
