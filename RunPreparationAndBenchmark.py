@@ -6,5 +6,8 @@ Created on Mon May  9 14:38:32 2016
 """
 
 import RunBenchmark
+from RunBenchmark import Dataset_Enum as dse
 
-RunBenchmark.RunBenchmark(numFolds=3)
+results = RunBenchmark.RunBenchmark(dataset_enum=dse.creditscoring1, numFolds=3)
+
+print(results)

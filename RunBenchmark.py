@@ -80,7 +80,7 @@ def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1):
         cost_mat_train, cost_mat_test)
 
     else:                   # run each fold, then average the values!
-        ds = create_all_folds(data, numFolds=numFolds)
+        ds = create_all_folds(data, numFolds=numFolds, trainRatio=0.8)
 
         for key, fold in ds.folds.items():
             results[key] = RunBenchmark_private(fold.x_train, fold.x_test, \
