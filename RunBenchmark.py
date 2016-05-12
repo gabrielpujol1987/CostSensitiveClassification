@@ -20,8 +20,8 @@ class Dataset_Enum(Enum):
 def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1):
     """
         This function runs the benchmark from AAAAAAAAAAAAAAAAAAAAAAAA
-    
-    
+
+
     """
 
     print_verbose = False
@@ -68,7 +68,7 @@ def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1):
     ######################################################
 
     results = {}
-        
+
 
     if numFolds == 1:       # run the Benchmark once and go!
 
@@ -81,110 +81,110 @@ def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1):
 
     else:                   # run each fold, then average the values!
         ds = create_all_folds(data, numFolds=numFolds)
-    
+
         for key, fold in ds.folds.items():
             results[key] = RunBenchmark_private(fold.x_train, fold.x_test, \
             fold.y_train, fold.y_test, fold.cost_mat_train, fold.cost_mat_test)
-    
+
     return results
 
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_mat_test):
 
     """
-    In this function, the code of the tutorial published by @ALBAHNSEN in 
+    In this function, the code of the tutorial published by @ALBAHNSEN in
     http://nbviewer.jupyter.org/github/albahnsen/CostSensitiveClassification/blob/master/doc/tutorials/tutorial_edcs_credit_scoring.ipynb
-    is reproduced in the form of a Benchmark. 
-    
+    is reproduced in the form of a Benchmark.
+
     There are 8 classifiers in total, given in three groups:
-    
-        - The classical classifiers: 
+
+        - The classical classifiers:
             + RF - Random Forest
             + DT - Decision Tree
             + LR - Logistic Regression
-            
+
         - The Bayes Minimum Risk classifier approach, based on the three classical classifiers:
             + RF-BMR
             + DT-BMR
             + LR-BMR
-            
+
         - The Cost Sensitive classifiers:
             + CSDT - Cost Sensitive Decision Tree
             + CSRF - Cost Sensitive Random Forest
 
-    """    
+    """
 
     print_verbose = True
-    
+
     ######################################################
     ###########  I  M  P  O  R  T  S  ####################
     ######################################################
-    
+
     # First round of imports, the libraries and the dataset
     import pandas as pd
     import numpy as np
-    
-    
+
+
     # Second round, the models and the dataset splitter
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.tree import DecisionTreeClassifier
-    
+
     # Third round, the metrics
     from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
-    
+
     # Fourth round, the plotting tools
     from IPython.core.pylabtools import figsize
     import matplotlib.pyplot as plt
     import seaborn as sns
-    
+
     # Fifth round, the new classifiers (finally!)
     from costcla.metrics import savings_score
     from costcla.models import BayesMinimumRiskClassifier
     from costcla.models import CostSensitiveDecisionTreeClassifier
     from costcla.models import CostSensitiveRandomPatchesClassifier
-    
-    
-    
+
+
+
     ######################################################
     ##### M E A S U R E S   A N D   R E S U L T S ########
     ######################################################
-    
+
     # Measures to evaluate the performance
-    measures = {"f1": f1_score, "pre": precision_score, 
+    measures = {"f1": f1_score, "pre": precision_score,
                 "rec": recall_score, "acc": accuracy_score}
-                
+
     results = pd.DataFrame(columns=measures.keys())
     results["sav"] = np.zeros(results.shape[0])
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     ######################################################
     ######################################################
     ### Fit the classifiers using the training dataset ###
     ######################################################
     ######################################################
-    
-    
-    
+
+
+
     ######################################################
     ######## C L A S S I C A L   A P P R O A C H #########
     ######################################################
-    
+
     # First set of classifiers: RF, DT and LR
     classifiers = {"RF": {"f": RandomForestClassifier()},
                    "DT": {"f": DecisionTreeClassifier()},
                    "LR": {"f": LogisticRegression()}}
-    
+
     for model in classifiers.keys():
         # Fit
         classifiers[model]["f"].fit(X_train, y_train)
@@ -192,30 +192,30 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
         classifiers[model]["c"] = classifiers[model]["f"].predict(X_test)
         classifiers[model]["p"] = classifiers[model]["f"].predict_proba(X_test)
         classifiers[model]["p_train"] = classifiers[model]["f"].predict_proba(X_train)
-    
+
         # Evaluate
         results.loc[model] = 0
         results.loc[model, measures.keys()] = \
         [measures[measure](y_test, classifiers[model]["c"]) for measure in measures.keys()]
         results["sav"].loc[model] = savings_score(y_test, classifiers[model]["c"], cost_mat_test)
-        
+
     if print_verbose:
         print("the first three classifiers are fitted")
-    
-    
-    
-    
-    
+
+
+
+
+
     ######################################################
     ######## B A Y E S   M I N I M U M   R I S K #########
     ######################################################
-        
+
     # Second set of classifiers: RF-BMR, DT-BMR and LR-BMR
     ci_models = classifiers.copy().keys()
     for model in ci_models:
         classifiers[model+"-BMR"] = {"f": BayesMinimumRiskClassifier()}
         # Fit
-        classifiers[model+"-BMR"]["f"].fit(y_test, classifiers[model]["p"])  
+        classifiers[model+"-BMR"]["f"].fit(y_test, classifiers[model]["p"])
         # Calibration must be made in a validation set
         # Predict
         classifiers[model+"-BMR"]["c"] = classifiers[model+"-BMR"]["f"].predict(classifiers[model]["p"], cost_mat_test)
@@ -224,19 +224,19 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
         results.loc[model+"-BMR", measures.keys()] = \
         [measures[measure](y_test, classifiers[model+"-BMR"]["c"]) for measure in measures.keys()]
         results["sav"].loc[model+"-BMR"] = savings_score(y_test, classifiers[model+"-BMR"]["c"], cost_mat_test)
-        
+
     if print_verbose:
         print("the second three classifiers are done")
-    
-    	
-    	
-    	
-    	
-    	
+
+
+
+
+
+
     ######################################################
     ########### C S D T   C L A S S I F I E R ############
     ######################################################
-    
+
     # Third set of classifiers: CSTD and CSRP
     classifiers["CSDT"] = {"f": CostSensitiveDecisionTreeClassifier()}
     # Fit
@@ -248,15 +248,15 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     results.loc["CSDT", measures.keys()] = \
     [measures[measure](y_test, classifiers["CSDT"]["c"]) for measure in measures.keys()]
     results["sav"].loc["CSDT"] = savings_score(y_test, classifiers["CSDT"]["c"], cost_mat_test)
-        
+
     if print_verbose:
         print("the CSDT clasifier is ready")
-    
-    
+
+
     ######################################################
     ########### C S R P   C L A S S I F I E R ############
     ######################################################
-    
+
     classifiers["CSRP"] = {"f": CostSensitiveRandomPatchesClassifier(combination='weighted_voting')}
     # Fit
     classifiers["CSRP"]["f"].fit(X_train, y_train, cost_mat_train)
@@ -267,14 +267,14 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     results.loc["CSRP", measures.keys()] = \
     [measures[measure](y_test, classifiers["CSRP"]["c"]) for measure in measures.keys()]
     results["sav"].loc["CSRP"] = savings_score(y_test, classifiers["CSRP"]["c"], cost_mat_test)
-        
+
     if print_verbose:
         print("the CSRP clasifier is ready")
-    
 
 
-    
-    
+
+
+
     ######################################################
     ####### P L O T T I N G   T H E   R E S U L T S ######
     ######################################################
@@ -285,7 +285,7 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     #%matplotlib inline
     figsize(10, 5)
     ax = plt.subplot(111)
-    
+
     ind = np.arange(results.shape[0])
     width = 0.2
     l = ax.plot(ind, results, "-o")
@@ -293,9 +293,9 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     ax.set_xlim([-0.25, ind[-1]+.25])
     ax.set_xticks(ind)
     ax.set_xticklabels(results.index)
-    plt.show()    
-    
-    
+    plt.show()
+
+
 
 
 
@@ -303,7 +303,7 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     # Plot the results
     colors = sns.color_palette()
     ind = np.arange(results.shape[0])
-    
+
     figsize(10, 5)
     ax = plt.subplot(111)
     l = ax.plot(ind, results["f1"], "-o", label='F1Score', color=colors[2])
@@ -313,8 +313,8 @@ def RunBenchmark_private(X_train, X_test, y_train, y_test, cost_mat_train, cost_
     ax.set_xticks(ind)
     ax.set_xticklabels(results.index)
     plt.show()
-    
-    
 
-    
+
+
+
     return results
