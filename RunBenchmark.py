@@ -2,6 +2,8 @@
 """
 Created on Mon May  9 14:16:49 2016
 
+
+
 @author: gabrielpujol87
 """
 
@@ -17,9 +19,32 @@ class Dataset_Enum(Enum):
 
 
 
-def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1):
+def RunBenchmark(dataset_enum=Dataset_Enum.bankmarketing, numFolds=1, trainRatio=0.8):
     """
-        This function runs the benchmark from AAAAAAAAAAAAAAAAAAAAAAAA
+        In this function, the code of the tutorial published by @ALBAHNSEN in
+    http://nbviewer.jupyter.org/github/albahnsen/CostSensitiveClassification/blob/master/doc/tutorials/tutorial_edcs_credit_scoring.ipynb
+    is reproduced in the form of a Benchmark.
+
+    There are 8 classifiers in total, given in three groups:
+
+        - The classical classifiers:
+            + RF - Random Forest
+            + DT - Decision Tree
+            + LR - Logistic Regression
+
+        - The Bayes Minimum Risk classifier approach, based on the three classical classifiers:
+            + RF-BMR
+            + DT-BMR
+            + LR-BMR
+
+        - The Cost Sensitive classifiers:
+            + CSDT - Cost Sensitive Decision Tree
+            + CSRF - Cost Sensitive Random Forest
+            
+    The results are given in a Dictionary data structure, that will map the
+    correspondence between each fold index and the DataFrame of results of 
+    running the Benchmark over the data corresponding to that fold.
+    
 
 
     """
