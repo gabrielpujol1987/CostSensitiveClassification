@@ -357,6 +357,23 @@ def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False):
                  feature_names=data.columns.values, name='CreditGerman')
 
 
+def load_kdd98():
+    module_path = dirname(__file__)
+    raw_data = pd.read_csv(join(module_path, 'data', 'kdd98.csv'), delimiter=',')
+    descr = open(join(module_path, 'descr', 'kdd98.rst')).read()
+
+    n_samples = raw_data.shape[0]
+    target = np.zeros((n_samples,), dtype=np.int)
+    target[raw_data['TARGET_B'].values == 0] = 1
+    target = target.astype(int)
+    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float))
+
+    data = raw_data.drop(['TARGET_B', 'TARGET_D'], 1)
+
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat,
+                 target_names=['DONATION', 'NO_DONATION'], DESCR=descr,
+                 feature_names=data.columns.values, name='KDD98')
+
 
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     """ Private function to calculate the cost matrix of credit scoring models.
@@ -447,5 +464,16 @@ def _creditgerman_costmat(amount, cost_mat_parameters):
     cost_mat[:, 1] = amount[:]
     cost_mat[:, 2] = 0.0
     cost_mat[:, 3] = 0.0
+
+    return cost_mat
+
+
+def _kdd98_costmat(target, donation):
+    n_samples = len(target)
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = donation[:] - 0.68
+    cost_mat[:, 1] = 0.68
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
 
     return cost_mat
