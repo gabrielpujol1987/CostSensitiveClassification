@@ -23,7 +23,7 @@ class Bunch(dict):
         self.__dict__ = self
 
 
-def load_bankmarketing(cost_mat_parameters=None):
+def load_bankmarketing(cost_mat_parameters=None, nominal_attributes=False):
     """Load and return the bank marketing dataset (classification).
 
     The bank marketing is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -103,7 +103,10 @@ def load_bankmarketing(cost_mat_parameters=None):
     cols_dummies = ['job', 'marital', 'education', 'default', 'housing', 'loan', 'poutcome']
 
     for col_ in cols_dummies:
-        temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
+        if nominal_attributes:
+            temp_ = raw_data[col_]
+        else:
+            temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
         data = data.join(temp_)
 
     # Calculate cost_mat (see[1])
@@ -194,7 +197,7 @@ def load_creditscoring1(cost_mat_parameters=None):
                  feature_names=data.columns.values, name='CreditScoring_Kaggle2011')
 
 
-def load_creditscoring2(cost_mat_parameters=None):
+def load_creditscoring2(cost_mat_parameters=None, nominal_attributes=False):
     """Load and return the credit scoring PAKDD 2009 competition dataset (classification).
 
     The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -256,7 +259,10 @@ def load_creditscoring2(cost_mat_parameters=None):
                     'FLAG_MOTHERS_NAME', 'FLAG_FATHERS_NAME', 'FLAG_RESIDENCE_TOWN_eq_WORKING_TOWN',
                     'FLAG_RESIDENCE_STATE_eq_WORKING_STATE', 'FLAG_RESIDENCIAL_ADDRESS_eq_POSTAL_ADDRESS']
     for col_ in cols_dummies:
-        temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
+        if nominal_attributes:
+            temp_ = raw_data[col_]
+        else:
+            temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
         data = data.join(temp_)
 
     # Calculate cost_mat (see[1])
@@ -278,7 +284,7 @@ def load_creditscoring2(cost_mat_parameters=None):
                  feature_names=data.columns.values, name='CreditScoring_PAKDD2009')
 
 
-def load_creditgerman(cost_mat_parameters=None):
+def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False):
     """Load and return the UCI credit-german dataset (classification).
 
     The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -334,7 +340,10 @@ def load_creditgerman(cost_mat_parameters=None):
                     'personal_status', 'other_parties', 'property_magnitude', 'other_payment_plans',
                     'housing', 'job', 'own_telephone']
     for col_ in cols_dummies:
-        temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
+        if nominal_attributes:
+            temp_ = raw_data[col_]
+        else:
+            temp_ = pd.get_dummies(raw_data[col_], prefix=col_)
         data = data.join(temp_)
 
     # Calculate cost_mat
@@ -347,6 +356,23 @@ def load_creditgerman(cost_mat_parameters=None):
                  target_names=['good', 'bad'], DESCR=descr,
                  feature_names=data.columns.values, name='CreditGerman')
 
+
+def load_kdd98():
+    module_path = dirname(__file__)
+    raw_data = pd.read_csv(join(module_path, 'data', 'kdd98.csv'), delimiter=',')
+    descr = open(join(module_path, 'descr', 'kdd98.rst')).read()
+
+    n_samples = raw_data.shape[0]
+    target = np.zeros((n_samples,), dtype=np.int)
+    target[raw_data['TARGET_B'].values == 0] = 1
+    target = target.astype(int)
+    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float))
+
+    data = raw_data.drop(['TARGET_B', 'TARGET_D'], 1)
+
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat,
+                 target_names=['DONATION', 'NO_DONATION'], DESCR=descr,
+                 feature_names=data.columns.values, name='KDD98')
 
 
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
@@ -438,5 +464,16 @@ def _creditgerman_costmat(amount, cost_mat_parameters):
     cost_mat[:, 1] = amount[:]
     cost_mat[:, 2] = 0.0
     cost_mat[:, 3] = 0.0
+
+    return cost_mat
+
+
+def _kdd98_costmat(target, donation):
+    n_samples = len(target)
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = donation[:] - 0.68
+    cost_mat[:, 1] = 0.68
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
 
     return cost_mat
