@@ -27,9 +27,14 @@ class Info(object):
 def create_all_folds(ds, numFolds, trainRatio, seed=0):
     np.random.seed(seed)
     n_samples = len(ds.data)
-
+    
     main = Info()
-    main.train_index, main.test_index = train_test_split(range(n_samples), train_size=trainRatio)
+    # If trainRatio == 1 then uses the entire dataset for training
+    if trainRatio == 1:
+        main.train_index = range(n_samples)
+        main.test_index = [0] # Test set should be ignored
+    else:
+        main.train_index, main.test_index = train_test_split(range(n_samples), train_size=trainRatio)
     main.x_train, main.x_test = ds.data[main.train_index], ds.data[main.test_index]
     main.y_train, main.y_test = ds.target[main.train_index], ds.target[main.test_index]
     main.cost_mat_train, main.cost_mat_test = ds.cost_mat[main.train_index], ds.cost_mat[main.test_index]

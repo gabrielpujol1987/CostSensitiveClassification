@@ -357,7 +357,7 @@ def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False):
                  feature_names=data.columns.values, name='CreditGerman')
 
 
-def load_kdd98():
+def load_kdd98(as_benefit=False):
     module_path = dirname(__file__)
     raw_data = pd.read_csv(join(module_path, 'data', 'kdd98.csv'), delimiter=',')
     descr = open(join(module_path, 'descr', 'kdd98.rst')).read()
@@ -366,7 +366,7 @@ def load_kdd98():
     target = np.zeros((n_samples,), dtype=np.int)
     target[raw_data['TARGET_B'].values == 0] = 1
     target = target.astype(int)
-    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float))
+    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float), as_benefit)
 
     data = raw_data.drop(['TARGET_B', 'TARGET_D'], 1)
 
@@ -468,12 +468,19 @@ def _creditgerman_costmat(amount, cost_mat_parameters):
     return cost_mat
 
 
-def _kdd98_costmat(target, donation):
+def _kdd98_costmat(target, donation, as_benefit):
     n_samples = len(target)
     cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
-    cost_mat[:, 0] = donation[:] - 0.68
-    cost_mat[:, 1] = 0.68
-    cost_mat[:, 2] = 0
-    cost_mat[:, 3] = 0
+    
+    if as_benefit:
+        cost_mat[:, 0] = 0 #FP
+        cost_mat[:, 1] = 0.68 #FN
+        cost_mat[:, 2] = 0 #TP
+        cost_mat[:, 3] = -(donation[:] - 0.68) #TN
+    else:
+        cost_mat[:, 0] = donation[:] - 0.68 #FP
+        cost_mat[:, 1] = 0.68 #FN
+        cost_mat[:, 2] = 0 #TP
+        cost_mat[:, 3] = 0 #TN
 
     return cost_mat
