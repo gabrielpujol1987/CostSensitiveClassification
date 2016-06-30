@@ -393,6 +393,24 @@ def load_skin():
                  feature_names=feature_names, name='Skin')
 
 
+def load_diabetes(fileName):
+    module_path = dirname(__file__)
+    raw_data = pd.read_csv(join(module_path, 'data', fileName + '.csv'), delimiter=',')
+    descr = []
+    
+    n_samples = raw_data.shape[0]
+    target = np.ones((n_samples,), dtype=np.int)
+    target[raw_data['readmitted'].values == raw_data['readmitted'].values[0]] = 0
+    target = target.astype(int)
+    
+    feature_names = raw_data.columns.values
+    data = raw_data.drop(['readmitted'], 1)
+    
+    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
+                 target_names=[],
+                 feature_names=feature_names, name='fileName')
+
+
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     """ Private function to calculate the cost matrix of credit scoring models.
 
