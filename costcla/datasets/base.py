@@ -375,6 +375,24 @@ def load_kdd98(as_benefit=False):
                  feature_names=data.columns.values, name='KDD98')
 
 
+def load_skin():
+    module_path = dirname(__file__)
+    raw_data = pd.read_csv(join(module_path, 'data', 'Skin.csv'), delimiter=',')
+    descr = open(join(module_path, 'descr', 'Skin.rst')).read()
+    
+    n_samples = raw_data.shape[0]
+    target = np.zeros((n_samples,), dtype=np.int)
+    target[raw_data['Class'].values == 2] = 1
+    target = target.astype(int)
+    
+    feature_names = raw_data.columns.values
+    data = raw_data.drop(['Class'], 1)
+    
+    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
+                 target_names=['SKIN', 'NO_SKIN'],
+                 feature_names=feature_names, name='Skin')
+
+
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     """ Private function to calculate the cost matrix of credit scoring models.
 

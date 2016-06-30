@@ -7,12 +7,28 @@ import numpy as np
 
 
 def create_c_files(ds, filename, output_folder):
-    orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names, ds.target_names)
+    useCost = ds.orig_cost_mat != []
+    
+    # Create file with all samples
+    if useCost:
+        orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names, ds.target_names)
+    else:
+        orig_data, header = _create_matrix_noncost(ds.orig_data, ds.orig_target, ds.feature_names, ds.target_names)
     _write_csv(filename + '_ORIGINAL', output_folder, orig_data, header)
-    train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names, ds.target_names)
+    
+    # Create train file
+    if useCost:
+        train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names, ds.target_names)
+    else:
+        train_data, header = _create_matrix_noncost(ds.main.x_train, ds.main.y_train, ds.feature_names, ds.target_names)
     train_filename = filename + '_TRAIN'
     _write_csv(train_filename, output_folder, train_data, header)
-    test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names, ds.target_names)
+    
+    # Create test file
+    if useCost:
+        test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names, ds.target_names)
+    else:
+        test_data, header = _create_matrix_noncost(ds.main.x_test, ds.main.y_test, ds.feature_names, ds.target_names)
     _write_csv(filename + '_TEST', output_folder, test_data, header)
 
     for key, fold in ds.folds.items():
@@ -49,3 +65,11 @@ def _create_matrix(data, target, cost_mat, feature_names, target_names):
     final_data = np.append(final_data, bad_cost, axis=1)
 
     return final_data, np.append(feature_names, target_names)
+
+
+def _create_matrix_noncost(data, target, feature_names, target_names):
+    matrix_target = np.zeros([len(target), 1])
+    matrix_target[:, 0] = target
+    final_data = np.append(data, matrix_target, axis=1)
+    
+    return final_data, feature_names
