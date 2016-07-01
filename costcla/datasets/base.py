@@ -391,11 +391,17 @@ def load_skin():
     target[raw_data['Class'].values == 2] = 1
     target = target.astype(int)
     
-    feature_names = raw_data.columns.values
     data = raw_data.drop(['Class'], 1)
+    feature_names = data.columns.values
     
-    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
-                 target_names=['SKIN', 'NO_SKIN'],
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = 1
+    cost_mat[:, 1] = 1
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
+    
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat, DESCR=descr,
+                 target_names=['NO_SKIN', 'SKIN'],
                  feature_names=feature_names, name='Skin')
 
 
@@ -409,12 +415,19 @@ def load_diabetes(fileName):
     target[raw_data['readmitted'].values == raw_data['readmitted'].values[0]] = 0
     target = target.astype(int)
     
-    feature_names = raw_data.columns.values
     data = raw_data.drop(['readmitted'], 1)
+    feature_names = data.columns.values
     
-    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
-                 target_names=[],
-                 feature_names=feature_names, name='fileName')
+    n_samples = len(target)
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = 1
+    cost_mat[:, 1] = 1
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
+    
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat, DESCR=descr,
+                 target_names=['0', '1'],
+                 feature_names=feature_names, name=fileName)
 
 
 def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters, useCost):

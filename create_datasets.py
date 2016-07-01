@@ -15,9 +15,9 @@ dataset_name = "tmp"
 #data = load_creditscoring2(nominal_attributes=True, useCost=False)
 #data = load_creditgerman(nominal_attributes=True, useCost=False)
 #data = load_bankmarketing(nominal_attributes=True, useCost=False)
-data = load_kdd98(as_benefit=False, useCost=False)
+#data = load_kdd98(as_benefit=False, useCost=False)
 #data = load_skin()
-#data = load_diabetes(dataset_name)
+data = load_diabetes('Diabetes_gt30_lt30')
 
 ds = create_all_folds(data, num_folds, train_ratio, 0)
 create_c_files(ds, dataset_name, "C:\\Users\\Daniel\\Documents\\DataSets\\Python\\tmp\\")
