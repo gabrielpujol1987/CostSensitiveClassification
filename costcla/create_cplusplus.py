@@ -7,28 +7,17 @@ import numpy as np
 
 
 def create_c_files(ds, filename, output_folder):
-    useCost = ds.orig_cost_mat != []
-    
     # Create file with all samples
-    if useCost:
-        orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names, ds.target_names)
-    else:
-        orig_data, header = _create_matrix_noncost(ds.orig_data, ds.orig_target, ds.feature_names, ds.target_names)
+    orig_data, header = _create_matrix(ds.orig_data, ds.orig_target, ds.orig_cost_mat, ds.feature_names, ds.target_names)
     _write_csv(filename + '_ORIGINAL', output_folder, orig_data, header)
     
     # Create train file
-    if useCost:
-        train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names, ds.target_names)
-    else:
-        train_data, header = _create_matrix_noncost(ds.main.x_train, ds.main.y_train, ds.feature_names, ds.target_names)
+    train_data, header = _create_matrix(ds.main.x_train, ds.main.y_train, ds.main.cost_mat_train, ds.feature_names, ds.target_names)
     train_filename = filename + '_TRAIN'
     _write_csv(train_filename, output_folder, train_data, header)
     
     # Create test file
-    if useCost:
-        test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names, ds.target_names)
-    else:
-        test_data, header = _create_matrix_noncost(ds.main.x_test, ds.main.y_test, ds.feature_names, ds.target_names)
+    test_data, header = _create_matrix(ds.main.x_test, ds.main.y_test, ds.main.cost_mat_test, ds.feature_names, ds.target_names)
     _write_csv(filename + '_TEST', output_folder, test_data, header)
 
     for key, fold in ds.folds.items():

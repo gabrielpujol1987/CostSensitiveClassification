@@ -27,7 +27,6 @@ class Info(object):
 def create_all_folds(ds, numFolds, trainRatio, seed=0):
     np.random.seed(seed)
     n_samples = len(ds.data)
-    useCost = ds.cost_mat != []
     
     main = Info()
     # If trainRatio == 1 then uses the entire dataset for training
@@ -39,8 +38,7 @@ def create_all_folds(ds, numFolds, trainRatio, seed=0):
 
     main.x_train, main.x_test = ds.data[main.train_index], ds.data[main.test_index]
     main.y_train, main.y_test = ds.target[main.train_index], ds.target[main.test_index]
-    if useCost:
-        main.cost_mat_train, main.cost_mat_test = ds.cost_mat[main.train_index], ds.cost_mat[main.test_index]
+    main.cost_mat_train, main.cost_mat_test = ds.cost_mat[main.train_index], ds.cost_mat[main.test_index]
     
     n_train = len(main.x_train)
     kf = cross_validation.KFold(n=n_train, n_folds=numFolds, shuffle=False, random_state=None)
@@ -52,8 +50,7 @@ def create_all_folds(ds, numFolds, trainRatio, seed=0):
         folds[count].test_index = test_index
         folds[count].x_train, folds[count].x_test = main.x_train[train_index], main.x_train[test_index]
         folds[count].y_train, folds[count].y_test = main.y_train[train_index], main.y_train[test_index]
-        if useCost:
-            folds[count].cost_mat_train, folds[count].cost_mat_test = main.cost_mat_train[train_index], main.cost_mat_train[test_index]
+        folds[count].cost_mat_train, folds[count].cost_mat_test = main.cost_mat_train[train_index], main.cost_mat_train[test_index]
 
         count = count + 1
 
