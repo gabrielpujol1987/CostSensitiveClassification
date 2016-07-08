@@ -11,13 +11,13 @@ from costcla.create_cplusplus import create_c_files
 num_folds = 10
 train_ratio = 0.8
 dataset_name = "Diabetes_NO_lt30"
-#data = load_creditscoring1()
-#data = load_creditscoring2(nominal_attributes=True)
-#data = load_creditgerman(nominal_attributes=True)
-#data = load_bankmarketing(nominal_attributes=True)
-#data = load_kdd98(as_benefit=True)
+#data = load_creditscoring1(useCost=False)
+#data = load_creditscoring2(nominal_attributes=True, useCost=False)
+#data = load_creditgerman(nominal_attributes=False, useCost=False)
+#data = load_bankmarketing(nominal_attributes=True, useCost=False)
+#data = load_kdd98(as_benefit=False, useCost=False)
 #data = load_skin()
 data = load_diabetes(dataset_name)
 
 ds = create_all_folds(data, num_folds, train_ratio, 0)
-create_c_files(ds, dataset_name, "C:\\Users\\Daniel\\Documents\\DataSets\\Python\\diabetes\\NO_lt30\\Folds_10\\")
+create_c_files(ds, dataset_name, "C:\\Users\\Daniel\\Documents\\DataSets\\Python\\NonCost\\diabetes\\NO_lt30\\Folds_10\\")

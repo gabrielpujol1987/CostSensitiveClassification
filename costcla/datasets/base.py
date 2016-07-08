@@ -23,7 +23,7 @@ class Bunch(dict):
         self.__dict__ = self
 
 
-def load_bankmarketing(cost_mat_parameters=None, nominal_attributes=False):
+def load_bankmarketing(cost_mat_parameters=None, nominal_attributes=False, useCost=True):
     """Load and return the bank marketing dataset (classification).
 
     The bank marketing is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -118,17 +118,23 @@ def load_bankmarketing(cost_mat_parameters=None, nominal_attributes=False):
     int_r = cost_mat_parameters['int_r']
 
     cost_mat = np.zeros((n_samples, 4))  # cost_mat[FP,FN,TP,TN]
-    cost_mat[:, 0] = ca
-    cost_mat[:, 1] = np.maximum(data['balance'].values * int_r * per_balance, ca)  # C_FN >= C_TN Elkan
-    cost_mat[:, 2] = ca
-    cost_mat[:, 3] = 0.0
+    if useCost:
+        cost_mat[:, 0] = ca
+        cost_mat[:, 1] = np.maximum(data['balance'].values * int_r * per_balance, ca)  # C_FN >= C_TN Elkan
+        cost_mat[:, 2] = ca
+        cost_mat[:, 3] = 0.0
+    else:
+        cost_mat[:, 0] = 1
+        cost_mat[:, 1] = 1
+        cost_mat[:, 2] = 0
+        cost_mat[:, 3] = 0
 
     return Bunch(data=data.values, target=target, cost_mat=cost_mat,
                  target_names=['no', 'yes'], DESCR=descr,
                  feature_names=data.columns.values, name='DirectMarketing')
 
 
-def load_creditscoring1(cost_mat_parameters=None):
+def load_creditscoring1(cost_mat_parameters=None, useCost=True):
     """Load and return the credit scoring Kaggle Credit competition dataset (classification).
 
     The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -190,14 +196,14 @@ def load_creditscoring1(cost_mat_parameters=None):
                                'lgd': .75}
 
     pi_1 = target.mean()
-    cost_mat = _creditscoring_costmat(data['MonthlyIncome'].values, data['DebtRatio'].values, pi_1, cost_mat_parameters)
+    cost_mat = _creditscoring_costmat(data['MonthlyIncome'].values, data['DebtRatio'].values, pi_1, cost_mat_parameters, useCost)
 
     return Bunch(data=data.values, target=target, cost_mat=cost_mat,
                  target_names=['no', 'yes'], DESCR=descr,
                  feature_names=data.columns.values, name='CreditScoring_Kaggle2011')
 
 
-def load_creditscoring2(cost_mat_parameters=None, nominal_attributes=False):
+def load_creditscoring2(cost_mat_parameters=None, nominal_attributes=False, useCost=True):
     """Load and return the credit scoring PAKDD 2009 competition dataset (classification).
 
     The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -277,14 +283,14 @@ def load_creditscoring2(cost_mat_parameters=None, nominal_attributes=False):
     n_samples = data.shape[0]
     pi_1 = target.mean()
     monthly_income = data['PERSONAL_NET_INCOME'].values * 0.33
-    cost_mat = _creditscoring_costmat(monthly_income, np.zeros(n_samples), pi_1, cost_mat_parameters)
+    cost_mat = _creditscoring_costmat(monthly_income, np.zeros(n_samples), pi_1, cost_mat_parameters, useCost)
 
     return Bunch(data=data.values, target=target, cost_mat=cost_mat,
                  target_names=['no', 'yes'], DESCR=descr,
                  feature_names=data.columns.values, name='CreditScoring_PAKDD2009')
 
 
-def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False):
+def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False, useCost=True):
     """Load and return the UCI credit-german dataset (classification).
 
     The credit scoring is a easily transformable example-dependent cost-sensitive classification dataset.
@@ -350,14 +356,14 @@ def load_creditgerman(cost_mat_parameters=None, nominal_attributes=False):
     if cost_mat_parameters is None:
         cost_mat_parameters = {'int_r': 0.15}
 
-    cost_mat = _creditgerman_costmat(data['credit_amount'].values, cost_mat_parameters)
+    cost_mat = _creditgerman_costmat(data['credit_amount'].values, cost_mat_parameters, useCost)
 
     return Bunch(data=data.values, target=target, cost_mat=cost_mat,
                  target_names=['good', 'bad'], DESCR=descr,
                  feature_names=data.columns.values, name='CreditGerman')
 
 
-def load_kdd98(as_benefit=False):
+def load_kdd98(as_benefit=False, useCost=True):
     module_path = dirname(__file__)
     raw_data = pd.read_csv(join(module_path, 'data', 'kdd98.csv'), delimiter=',')
     descr = open(join(module_path, 'descr', 'kdd98.rst')).read()
@@ -366,7 +372,7 @@ def load_kdd98(as_benefit=False):
     target = np.zeros((n_samples,), dtype=np.int)
     target[raw_data['TARGET_B'].values == 0] = 1
     target = target.astype(int)
-    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float), as_benefit)
+    cost_mat = _kdd98_costmat(target, raw_data['TARGET_D'].astype(np.float), as_benefit, useCost)
 
     data = raw_data.drop(['TARGET_B', 'TARGET_D'], 1)
 
@@ -385,11 +391,17 @@ def load_skin():
     target[raw_data['Class'].values == 2] = 1
     target = target.astype(int)
     
-    feature_names = raw_data.columns.values
     data = raw_data.drop(['Class'], 1)
+    feature_names = data.columns.values
     
-    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
-                 target_names=['SKIN', 'NO_SKIN'],
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = 1
+    cost_mat[:, 1] = 1
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
+    
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat, DESCR=descr,
+                 target_names=['NO_SKIN', 'SKIN'],
                  feature_names=feature_names, name='Skin')
 
 
@@ -403,15 +415,22 @@ def load_diabetes(fileName):
     target[raw_data['readmitted'].values == raw_data['readmitted'].values[0]] = 0
     target = target.astype(int)
     
-    feature_names = raw_data.columns.values
     data = raw_data.drop(['readmitted'], 1)
+    feature_names = data.columns.values
     
-    return Bunch(data=data.values, target=target, cost_mat=[], DESCR=descr,
-                 target_names=[],
-                 feature_names=feature_names, name='fileName')
+    n_samples = len(target)
+    cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+    cost_mat[:, 0] = 1
+    cost_mat[:, 1] = 1
+    cost_mat[:, 2] = 0
+    cost_mat[:, 3] = 0
+    
+    return Bunch(data=data.values, target=target, cost_mat=cost_mat, DESCR=descr,
+                 target_names=['0', '1'],
+                 feature_names=feature_names, name=fileName)
 
 
-def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
+def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters, useCost):
     """ Private function to calculate the cost matrix of credit scoring models.
 
     Parameters
@@ -439,6 +458,16 @@ def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
         Where the columns represents the costs of: false positives, false negatives,
         true positives and true negatives, for each example.
     """
+    
+    if not useCost:
+        n_samples = len(income)
+        cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
+        cost_mat[:, 0] = 1
+        cost_mat[:, 1] = 1
+        cost_mat[:, 2] = 0
+        cost_mat[:, 3] = 0
+        return cost_mat
+    
     def calculate_a(cl_i, int_, n_term):
         """ Private function """
         return cl_i * ((int_ * (1 + int_) ** n_term) / ((1 + int_) ** n_term - 1))
@@ -493,30 +522,43 @@ def _creditscoring_costmat(income, debt, pi_1, cost_mat_parameters):
     return cost_mat
 
 
-def _creditgerman_costmat(amount, cost_mat_parameters):
+def _creditgerman_costmat(amount, cost_mat_parameters, useCost):
     n_samples = len(amount)
     cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
-    cost_mat[:, 0] = amount[:] * cost_mat_parameters['int_r']
-    cost_mat[:, 1] = amount[:]
-    cost_mat[:, 2] = 0.0
-    cost_mat[:, 3] = 0.0
+    
+    if useCost:
+        cost_mat[:, 0] = amount[:] * cost_mat_parameters['int_r']
+        cost_mat[:, 1] = amount[:]
+        cost_mat[:, 2] = 0.0
+        cost_mat[:, 3] = 0.0
+    else:
+        cost_mat[:, 0] = 1
+        cost_mat[:, 1] = 1
+        cost_mat[:, 2] = 0
+        cost_mat[:, 3] = 0
 
     return cost_mat
 
 
-def _kdd98_costmat(target, donation, as_benefit):
+def _kdd98_costmat(target, donation, as_benefit, useCost):
     n_samples = len(target)
     cost_mat = np.zeros((n_samples, 4)) #cost_mat[FP,FN,TP,TN]
     
-    if as_benefit:
-        cost_mat[:, 0] = 0 #FP
-        cost_mat[:, 1] = 0.68 #FN
-        cost_mat[:, 2] = 0 #TP
-        cost_mat[:, 3] = -(donation[:] - 0.68) #TN
+    if useCost:
+        if as_benefit:
+            cost_mat[:, 0] = 0 #FP
+            cost_mat[:, 1] = 0.68 #FN
+            cost_mat[:, 2] = 0 #TP
+            cost_mat[:, 3] = -(donation[:] - 0.68) #TN
+        else:
+            cost_mat[:, 0] = donation[:] - 0.68 #FP
+            cost_mat[:, 1] = 0.68 #FN
+            cost_mat[:, 2] = 0 #TP
+            cost_mat[:, 3] = 0 #TN
     else:
-        cost_mat[:, 0] = donation[:] - 0.68 #FP
-        cost_mat[:, 1] = 0.68 #FN
-        cost_mat[:, 2] = 0 #TP
-        cost_mat[:, 3] = 0 #TN
+        cost_mat[:, 0] = 1
+        cost_mat[:, 1] = 1
+        cost_mat[:, 2] = 0
+        cost_mat[:, 3] = 0
 
     return cost_mat
